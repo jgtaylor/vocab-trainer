@@ -1,4 +1,4 @@
-use egui::{CentralPanel, Widget};
+use egui::{CentralPanel, Widget, RichText};
 use merriam_webster_model::Entry;
 use reqwest::{blocking, RequestBuilder};
 
@@ -9,6 +9,7 @@ pub struct VocabTrainer {
     // Example stuff:
     pub prefered_dictionary: Dictionary,
     pub current_word: Option<String>,
+    pub entries: Vec<Entry>, // Store fetched entries here
 }
 
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -25,6 +26,7 @@ impl Default for VocabTrainer {
         Self {
             prefered_dictionary,
             current_word: None,
+            entries: Vec::new(), // Initialize as an empty vector
             // Example stuff:
         }
     }
@@ -44,6 +46,16 @@ impl VocabTrainer {
 
         Default::default()
     }
+
+    pub fn fetch_definition(&mut self, word: String) {
+        let url = match &self.prefered_dictionary {
+            Dictionary::Learners(base_url) => format!("{}{word}?key=a677e0ca-3c64-49e3-8366-ffaed5d8979a", base_url),
+            Dictionary::Collegiate(base_url) => format!("{}{word}?key=a677e0ca-3c64-49e3-8366-ffaed5d8979a", base_url),
+        };
+
+        let response = blocking::get(url).expect("Failed to fetch definition");
+        self.entries = response.json::<Vec<Entry>>().expect("Failed to parse JSON");
+    }
 }
 
 impl eframe::App for VocabTrainer {
@@ -56,6 +68,25 @@ impl eframe::App for VocabTrainer {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         // Put your widgets into a `SidePanel`, `TopBottomPanel`, `CentralPanel`, `Window` or `Area`.
         // For inspiration and more examples, go to https://emilk.github.io/egui
+        CentralPanel::default().show(ctx, |ui| {
+            ui.heading(RichText::new("Vocabulary Trainer").strong().size(24.0));
+            
+            let mut word_to_lookup = self.current_word.clone().unwrap_or_else(|| "Enter a word to look up".to_string());
+            
+            if ui.text_edit_singleline(&mut word_to_lookup).changed() {
+                self.current_word = Some(word_to_lookup.clone());
+            }
+
+            if ui.button("Get the definition!").clicked() {
+                if let Some(ref current_word) = self.current_word {
+                    self.fetch_definition(current_word.clone());
+                }
+            }
+
+            for entry in &self.entries {
+                ui.add(egui::Label::new(format!("{:?}", entry)));
+            }
+        });
     }
 }
 
