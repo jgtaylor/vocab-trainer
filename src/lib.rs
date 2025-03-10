@@ -1,4 +1,4 @@
 #![warn(clippy::all, rust_2018_idioms)]
 
-mod app;
-pub use app::TemplateApp;
+mod vocab_trainer;
+pub use vocab_trainer::VocabTrainer;
