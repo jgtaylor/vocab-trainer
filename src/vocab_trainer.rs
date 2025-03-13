@@ -1,6 +1,6 @@
-use egui::{CentralPanel, Widget, RichText};
+use egui::{CentralPanel, RichText};
 use merriam_webster_model::Entry;
-use reqwest::{blocking, RequestBuilder};
+use reqwest::blocking;
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -27,7 +27,7 @@ impl Default for VocabTrainer {
             prefered_dictionary,
             current_word: None,
             entries: Vec::new(), // Initialize as an empty vector
-            // Example stuff:
+                                 // Example stuff:
         }
     }
 }
@@ -49,8 +49,14 @@ impl VocabTrainer {
 
     pub fn fetch_definition(&mut self, word: String) {
         let url = match &self.prefered_dictionary {
-            Dictionary::Learners(base_url) => format!("{}{word}?key=a677e0ca-3c64-49e3-8366-ffaed5d8979a", base_url),
-            Dictionary::Collegiate(base_url) => format!("{}{word}?key=a677e0ca-3c64-49e3-8366-ffaed5d8979a", base_url),
+            Dictionary::Learners(base_url) => format!(
+                "{}{word}?key=a677e0ca-3c64-49e3-8366-ffaed5d8979a",
+                base_url
+            ),
+            Dictionary::Collegiate(base_url) => format!(
+                "{}{word}?key=a677e0ca-3c64-49e3-8366-ffaed5d8979a",
+                base_url
+            ),
         };
 
         let response = blocking::get(url).expect("Failed to fetch definition");
@@ -69,11 +75,14 @@ impl eframe::App for VocabTrainer {
         // Put your widgets into a `SidePanel`, `TopBottomPanel`, `CentralPanel`, `Window` or `Area`.
         // For inspiration and more examples, go to https://emilk.github.io/egui
         CentralPanel::default().show(ctx, |ui| {
-                    // Add a heading with the title "Vocabulary Trainer".
+            // Add a heading with the title "Vocabulary Trainer".
             ui.heading(RichText::new("Vocabulary Trainer").strong().size(24.0));
-            
+
             // Clone the current word or provide a placeholder text if it's None.
-            let mut word_to_lookup = self.current_word.clone().unwrap_or_else(|| "Enter a word to look up".to_string());
+            let mut word_to_lookup = self
+                .current_word
+                .clone()
+                .unwrap_or_else(|| "Enter a word to look up".to_string());
             // Check if the single-line text edit has changed and update the state accordingly.
             if ui.text_edit_singleline(&mut word_to_lookup).changed() {
                 self.current_word = Some(word_to_lookup.clone());
