@@ -1,4 +1,4 @@
-use egui::{CentralPanel, RichText, ScrollArea, SidePanel};
+use egui::{CentralPanel, Layout, RichText, ScrollArea, SidePanel, TopBottomPanel};
 use merriam_webster_model::Entry;
 use reqwest::blocking;
 
@@ -73,38 +73,68 @@ impl eframe::App for VocabTrainer {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         // Put your widgets into a `SidePanel`, `TopBottomPanel`, `CentralPanel`, `Window` or `Area`.
         // For inspiration and more examples, go to https://emilk.github.io/egui
+        TopBottomPanel::top("Vocabulary_Trainer")
+            .show_separator_line(true)
+            .show(ctx, |ui| {
+                ui.vertical_centered(|ui| {
+                    ui.heading(RichText::new("Vocabulary Trainer").strong().size(24.0))
+                });
+            });
+        // Display each entry in the 'entries' vector as a label.
+        SidePanel::left("Word Entries").show(ctx, |ui| {
+            for (i, entry) in self.entries.iter().enumerate() {
+                if let Some(new_word) = Some(&entry.hwi.value) {
+                    ui.heading(
+                        RichText::new(format!("{}: {}", i, new_word))
+                            .strong()
+                            .size(18.0),
+                    );
+                    ui.separator();
+                }
+            }
+        });
         CentralPanel::default().show(ctx, |ui| {
-            ScrollArea::both().show(ui, |ui| {
-                // Add a heading with the title "Vocabulary Trainer".
-                ui.heading(RichText::new("Vocabulary Trainer").strong().size(24.0));
+            // Clone the current word or provide a placeholder text if it's None.
+            let mut word_to_lookup = self
+                .current_word
+                .clone()
+                .unwrap_or_else(|| "Enter a word to look up".to_string());
+            // Check if the single-line text edit has changed and update the state accordingly.
 
-                // Clone the current word or provide a placeholder text if it's None.
-                let mut word_to_lookup = self
-                    .current_word
-                    .clone()
-                    .unwrap_or_else(|| "Enter a word to look up".to_string());
-                // Check if the single-line text edit has changed and update the state accordingly.
+            ui.with_layout(Layout::left_to_right(egui::Align::TOP), |ui| {
                 if ui.text_edit_singleline(&mut word_to_lookup).changed() {
                     self.current_word = Some(word_to_lookup.clone());
                 }
-                // If the button "Get the definition!" is clicked, fetch the definition for the current word.
                 if ui.button("Get the definition!").clicked() {
+                    // If the button "Get the definition!" is clicked, fetch the definition for the current word.
                     if let Some(ref current_word) = self.current_word {
                         self.fetch_definition(current_word.clone());
                     }
                 }
+            });
+            ui.separator();
+            // ui.with_layout(Layout::top_down(egui::Align::LEFT), |ui| {
+            ScrollArea::both().show(ui, |ui| {
                 if let Some(ref current_word) = self.current_word {
-                    ui.horizontal(|ui| {
-                        ui.heading(RichText::new(current_word).strong().size(18.0));
+                    ui.vertical_centered(|ui| {
+                        ui.heading(RichText::new(current_word).strong().underline().size(18.0));
+                    });
+                    ui.vertical(|ui| {
                         for entry in &self.entries {
-                            if let Some(fl) = &entry.fl {
-                                ui.label(RichText::new(fl).italics().size(16.0));
-                            }
-                            ui.separator();
+                            ui.with_layout(Layout::left_to_right(egui::Align::TOP), |ui| {
+                                if let Some(fl) = &entry.fl {
+                                    let fmt_hw =
+                                        RichText::new(&entry.hwi.value).italics().size(16.0);
+                                    let fmt_fl = RichText::new(fl).italics().size(14.0);
+                                    ui.label(fmt_hw);
+                                    ui.label(fmt_fl);
+                                }
+                            });
                             match &entry.def {
                                 Some(ref defs) => {
                                     for (idx, d) in defs.iter().enumerate() {
-                                        ui.label(RichText::new(format!("{:#?}", d.sense_sequence)).size(14.0));
+                                        ui.label(format!("{:?}", d.sense_sequence));
+                                        ui.separator();
                                     }
                                 }
                                 None => {} // Handle the case where 'def' is None
@@ -112,21 +142,8 @@ impl eframe::App for VocabTrainer {
                         }
                     });
                 }
-
-                // Display each entry in the 'entries' vector as a label.
-                SidePanel::left("Word Entries").show_inside(ui, |ui| {
-                    for (i, entry) in self.entries.iter().enumerate() {
-                        if let Some(main_word) = Some(&entry.hwi.value) {
-                            ui.heading(
-                                RichText::new(format!("{}: {}", i, main_word))
-                                    .strong()
-                                    .size(18.0),
-                            );
-                            ui.separator();
-                        }
-                    }
-                });
             });
+            // }); // ui.with_layout()
         });
     }
 }
