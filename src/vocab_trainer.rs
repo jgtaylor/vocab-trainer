@@ -74,7 +74,7 @@ impl eframe::App for VocabTrainer {
         // Put your widgets into a `SidePanel`, `TopBottomPanel`, `CentralPanel`, `Window` or `Area`.
         // For inspiration and more examples, go to https://emilk.github.io/egui
         CentralPanel::default().show(ctx, |ui| {
-            ScrollArea::vertical().show(ui, |ui| {
+            ScrollArea::both().show(ui, |ui| {
                 // Add a heading with the title "Vocabulary Trainer".
                 ui.heading(RichText::new("Vocabulary Trainer").strong().size(24.0));
 
