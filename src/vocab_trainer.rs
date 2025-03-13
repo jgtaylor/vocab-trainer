@@ -92,6 +92,19 @@ impl eframe::App for VocabTrainer {
                     self.fetch_definition(current_word.clone());
                 }
             }
+            if let Some(ref current_word) = self.current_word {
+                ui.heading(RichText::new(current_word).strong().size(18.0));
+                for entry in &self.entries {
+                    if let Some(fl) = &entry.fl {
+                        ui.label(RichText::new(fl).italics().size(16.0));
+                        ui.separator();
+                        for (idx, def) in entry.def.iter().enumerate() {
+                            ui.label(RichText::new(format!("{:#?}", Some(def))).size(14.0));
+                        }
+                    }
+                }
+            }
+
             // Display each entry in the 'entries' vector as a label.
             SidePanel::left("Word Entries").show_inside(ui, |ui| {
                 for (i, entry) in self.entries.iter().enumerate() {
