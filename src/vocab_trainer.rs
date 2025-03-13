@@ -1,4 +1,4 @@
-use egui::{CentralPanel, RichText};
+use egui::{CentralPanel, RichText, SidePanel};
 use merriam_webster_model::Entry;
 use reqwest::blocking;
 
@@ -14,15 +14,13 @@ pub struct VocabTrainer {
 
 #[derive(serde::Deserialize, serde::Serialize)]
 pub enum Dictionary {
-    Learners(String),
-    Collegiate(String),
+    Learners,
+    Collegiate,
 }
 
 impl Default for VocabTrainer {
     fn default() -> Self {
-        let prefered_dictionary = Dictionary::Learners(
-            "https://dictionaryapi.com/api/v3/references/learners/json/".to_string(),
-        );
+        let prefered_dictionary = Dictionary::Learners;
         Self {
             prefered_dictionary,
             current_word: None,
@@ -48,13 +46,14 @@ impl VocabTrainer {
     }
 
     pub fn fetch_definition(&mut self, word: String) {
+        let base_url = "https://dictionaryapi.com/api/v3/references/".to_string();
         let url = match &self.prefered_dictionary {
-            Dictionary::Learners(base_url) => format!(
-                "{}{word}?key=a677e0ca-3c64-49e3-8366-ffaed5d8979a",
+            Dictionary::Learners => format!(
+                "{}/json/{word}?key=a677e0ca-3c64-49e3-8366-ffaed5d8979a",
                 base_url
             ),
-            Dictionary::Collegiate(base_url) => format!(
-                "{}{word}?key=a677e0ca-3c64-49e3-8366-ffaed5d8979a",
+            Dictionary::Collegiate => format!(
+                "{}/json/{word}?key=a677e0ca-3c64-49e3-8366-ffaed5d8979a",
                 base_url
             ),
         };
@@ -94,9 +93,18 @@ impl eframe::App for VocabTrainer {
                 }
             }
             // Display each entry in the 'entries' vector as a label.
-            for entry in &self.entries {
-                ui.add(egui::Label::new(format!("{:?}", entry)));
-            }
+            SidePanel::left("Word Entries").show_inside(ui, |ui| {
+                for (i, entry) in self.entries.iter().enumerate() {
+                    if let Some(main_word) = Some(&entry.hwi.value) {
+                        ui.heading(
+                            RichText::new(format!("{}: {}", i, main_word))
+                                .strong()
+                                .size(18.0),
+                        );
+                        ui.separator();
+                    }
+                }
+            });
         });
     }
 }
