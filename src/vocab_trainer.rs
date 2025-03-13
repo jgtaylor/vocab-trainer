@@ -104,7 +104,7 @@ impl eframe::App for VocabTrainer {
                             match &entry.def {
                                 Some(ref defs) => {
                                     for (idx, d) in defs.iter().enumerate() {
-                                        ui.label(RichText::new(format!("{:#?}", d)).size(14.0));
+                                        ui.label(RichText::new(format!("{:#?}", d.sense_sequence)).size(14.0));
                                     }
                                 }
                                 None => {} // Handle the case where 'def' is None
