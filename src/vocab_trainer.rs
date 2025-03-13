@@ -49,11 +49,11 @@ impl VocabTrainer {
         let base_url = "https://dictionaryapi.com/api/v3/references/".to_string();
         let url = match &self.prefered_dictionary {
             Dictionary::Learners => format!(
-                "{}/json/{word}?key=a677e0ca-3c64-49e3-8366-ffaed5d8979a",
+                "{}learners/json/{word}?key=a677e0ca-3c64-49e3-8366-ffaed5d8979a",
                 base_url
             ),
             Dictionary::Collegiate => format!(
-                "{}/json/{word}?key=a677e0ca-3c64-49e3-8366-ffaed5d8979a",
+                "{}collegiate/json/{word}?key=a677e0ca-3c64-49e3-8366-ffaed5d8979a",
                 base_url
             ),
         };
